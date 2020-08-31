@@ -2,38 +2,66 @@ clc
 clear classes
 clear all
 close all
-%% Desired Trajectory
-%A = [5,1.5,2];
-%A = [-0.3404,-0.0156,0.4884];
-%A = [0.0360,-0.2866,0.7486]; %[0 10 -60 45 30 0]
-A = [0.5088,0.2866,-0.5503]; %q=deg2rad([0 -150 -60 -45 -15 0])';
-B = [-0.1440,-0.6546,0.5040]; %q=deg2rad([60 60 -60 30 15 0])';  
-%B = [3,-0.0156,0.4884];
-%B = [2,-2.5,2];
-%B = [-0.1342,-0.1761,0.7726]; % for q=deg2rad([0 30 -30 45 60 15])';
-%V = 2.5;
-T = 5;
-vin = [0,0,0];
-vf = [0,0,0]; 
-dt = 0.001; %sampling time
-
-tSteps = 0:dt:T;
-nSteps = size(tSteps,2);
-tau = tSteps/T; %tau is between 0 and 1
-X_d = zeros(nSteps,3);
-dX_d = zeros(nSteps,3);
-ddX_d = zeros(nSteps,3);
+%%  Desired Cubic Trajectory
+% %A = [5,1.5,2];
+% %A = [-0.3404,-0.0156,0.4884];
+% %A = [0.0360,-0.2866,0.7486]; %[0 10 -60 45 30 0]
+% A = [0.5088,0.2866,-0.5503]; %q=deg2rad([0 -150 -60 -45 -15 0])';
+% B = [-0.1440,-0.6546,0.5040]; %q=deg2rad([60 60 -60 30 15 0])';  
+% %B = [3,-0.0156,0.4884];
+% %B = [2,-2.5,2];
+% %B = [-0.1342,-0.1761,0.7726]; % for q=deg2rad([0 30 -30 45 60 15])';
+% %V = 2.5;
+% T = 5;
+% vin = [0,0,0];
+% vf = [0,0,0]; 
+% dt = 0.001; %sampling time
+% 
+% tSteps = 0:dt:T;
+% nSteps = size(tSteps,2);
+% tau = tSteps/T; %tau is between 0 and 1
+% X_d = zeros(nSteps,3);
+% dX_d = zeros(nSteps,3);
+% ddX_d = zeros(nSteps,3);
+% % for i = 1:nSteps
+% %     s_tau = -2*tau(i)*tau(i)*tau(i) + 3*tau(i)*tau(i);
+% %     ds_tau = -6*tau(i)*tau(i)/T + 6*tau(i)/T;
+% %     X_d(i,:) = A + (B-A)*s_tau;
+% %     dX_d(i,:) = (B-A)*ds_tau;
+% % end
+% dp = A; cp = vin; bp = (-3*(A-B)-(vin+vf)*T)/power(T,2); ap = (2*(A-B)+(vin+vf)*T)/power(T,3);
 % for i = 1:nSteps
-%     s_tau = -2*tau(i)*tau(i)*tau(i) + 3*tau(i)*tau(i);
-%     ds_tau = -6*tau(i)*tau(i)/T + 6*tau(i)/T;
-%     X_d(i,:) = A + (B-A)*s_tau;
-%     dX_d(i,:) = (B-A)*ds_tau;
+%     X_d(i,:) = ap*power(tSteps(i),3) + bp*power(tSteps(i),2) + cp*tSteps(i) + dp;
+%     dX_d(i,:) = 3*ap*power(tSteps(i),2) + 2*bp*tSteps(i) + cp;
+%     ddX_d(i,:) = 6*ap*tSteps(i) + 2*bp;
 % end
-dp = A; cp = vin; bp = (-3*(A-B)-(vin+vf)*T)/power(T,2); ap = (2*(A-B)+(vin+vf)*T)/power(T,3);
+%%  Desired Circular Trajectory
+dt = 0.0001; %sampling time
+T = 10; %Duration of the path
+tSteps = 0:dt:T; %instant of time
+nSteps = size(tSteps,2); %number of steps
+tau_s = tSteps/T; %normalized time
+% Define the circlular trajectory centered at (x0,y0), with radius 'R',
+% initial phase 'phi', and offset from the Z-axis 'z_0'.
+R= 0.35; %raduis
+x0 = 0.3;y0 = 0.3;z_0 = 0.2;
+phi = 0; %initial phase
+dzt_0 = 0;
+x = zeros(nSteps,1);y = zeros(nSteps,1);
+dxs = zeros(nSteps,1);dys = zeros(nSteps,1);
+dxt = zeros(nSteps,1);dyt = zeros(nSteps,1);
+X_d = zeros(nSteps,3);dX_d = zeros(nSteps,3);ddX_d = zeros(nSteps,3);
 for i = 1:nSteps
-    X_d(i,:) = ap*power(tSteps(i),3) + bp*power(tSteps(i),2) + cp*tSteps(i) + dp;
-    dX_d(i,:) = 3*ap*power(tSteps(i),2) + 2*bp*tSteps(i) + cp;
-    ddX_d(i,:) = 6*ap*tSteps(i) + 2*bp;
+    s = 2*pi*(tau_s(i));
+    ds = 2*pi/T;
+    x(i) = x0 + R*cos(s+phi);
+    y(i) = y0 + R*sin(s+phi);
+    dxs(i) = -R*sin(s+phi);
+    dys(i) = R*cos(s+phi);
+    dxt(i) = dxs(i)*ds;
+    dyt(i) = dys(i).*ds;
+    X_d(i,:) = [x(i) y(i) z_0];
+    dX_d(i,:) = [dxt(i) dyt(i) dzt_0];
 end
 %% Robot parameters for the KUKA-LWR
 d1=0.0;     % distance from base frame to second joint frame 
@@ -49,9 +77,9 @@ q(:,1)=deg2rad([0 -150 -60 -45 -15 0])';%for Pee=[0.0360,-0.2866,0.7486] 6x1 vec
 dq(:,1)=zeros(6,1); % 6x1 vector with the current joint velocity (the 7th joint is assumed to be fixed q_7=0)
 %%% no need to consider q7 if there is no EE desired orientation 
 ddq(:,1) = zeros(6,1);
-Kp = diag(1*[75,20,20]);
+Kp = diag(20*[1,1,1]);
 %Ki = 1;
-Kd = diag(1*[25,1,1]);
+Kd = diag(10*[1,1,1]);
 
 for i = 1:nSteps
     %fprintf('-----------%d----------',i);
@@ -93,10 +121,10 @@ ylabel('Traj z');
 legend('Output Traj z','Desired Traj z');
 
 figure;
-plot3(Pee(1,:)',Pee(2,:)',Pee(3,:)');;
+plot3(Pee(1,:)',Pee(2,:)',Pee(3,:)','linewidth',2);
 hold on
 plot3(X_d(:,1),X_d(:,2),X_d(:,3));
 xlabel('Traj x');
 ylabel('Traj y');
 zlabel('Traj z');
-legend('Output Traj','Desired Traj');
+legend('Output Traj','Desired Traj','linewidth',2);
