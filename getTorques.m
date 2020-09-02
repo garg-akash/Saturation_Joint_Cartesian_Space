@@ -4,8 +4,9 @@
 %J_h = J hat
 %J_hc = J hat cap
 function [T_stack] = getTorques(tasks, M, c, g, dq,  m, n)%qsym, dqsym, symvalues,
+    disp('22')
     k = length(tasks);
-    %fprintf('Number of tasks given : %d',k);
+    fprintf('Number of tasks given : %d',k);
     J = zeros(m,n); %1
     f_star = zeros(m,1); %2
  
