@@ -57,10 +57,10 @@ global robot
 
 X_max = 1*[1;1;1];
 X_min = 1*[-1;-1;-1];
-V_max = 10*[0.5;0.5;0.5];
-V_min = 10*[-0.5;-0.5;-0.5];
-A_max = 110*[0.5;0.5;0.5];
-A_min = 110*[-0.5;-0.5;-0.5];
+V_max = 1*[0.5;0.5;0.5];
+V_min = 1*[-0.5;-0.5;-0.5];
+A_max = 1*[0.5;0.5;0.5];
+A_min = 1*[-0.5;-0.5;-0.5];
 %% Control Loop
 q = zeros(6,nSteps);
 dq = zeros(6,nSteps);
@@ -76,7 +76,7 @@ dq(:,1)=zeros(6,1); % 6x1 vector with the current joint velocity (the 7th joint 
 %%% no need to consider q7 if there is no EE desired orientation 
 ddq(:,1) = zeros(6,1);
 
-Kp = diag([80 80 80]); %position gain
+Kp = diag([8 8 8]); %position gain
 Kv = 2*sqrt(Kp); %velocity gain
 Kd = 10; %damping gain
 
@@ -159,20 +159,24 @@ figure;
 plot3(Pee(1,:)',Pee(2,:)',Pee(3,:)','linewidth',2);
 hold on
 plot3(X_d(:,1),X_d(:,2),X_d(:,3));
+grid on
 xlabel('Traj x');
 ylabel('Traj y');
 zlabel('Traj z');
 legend('Output Traj','Desired Traj');
+title('Cartesian Trajectory Tracking')
 
 figure;
-plot(tSteps(1:size_Pee),error_p(1,:));
+plot(tSteps(1:size_Pee),error_p(1,:),'linewidth',2);
 hold on
-plot(tSteps(1:size_Pee),error_p(2,:));
+plot(tSteps(1:size_Pee),error_p(2,:),'linewidth',2);
 hold on
-plot(tSteps(1:size_Pee),error_p(3,:));
+plot(tSteps(1:size_Pee),error_p(3,:),'linewidth',2);
+grid on
 xlabel('Time steps');
 ylabel('error');
 legend('in x','in y','in z');
+title('Cartesian Error vs Time')
 
 figure
 plot(tSteps,T_stack_c(1,:),'linewidth',2);
@@ -186,7 +190,33 @@ hold on;
 plot(tSteps,T_stack_c(5,:),'linewidth',2);
 hold on;
 plot(tSteps,T_stack_c(6,:),'linewidth',2);
+grid on
 legend('j1','j2','j3','j4','j5','j6');
 xlabel('T');
 ylabel('Joint Torque');
+title('Joint Torque vs Time')
+
+figure
+plot(tSteps,ddPee(1,:),'linewidth',2);
+hold on;
+plot(tSteps,ddPee(2,:),'linewidth',2);
+hold on;
+plot(tSteps,ddPee(3,:),'linewidth',2);
+grid on
+legend('x','y','z');
+xlabel('T');
+ylabel('Acceleration');
+title('Cartesian Acceleration vs Time')
+
+figure
+plot(tSteps,dPee(1,:),'linewidth',2);
+hold on;
+plot(tSteps,dPee(2,:),'linewidth',2);
+hold on;
+plot(tSteps,dPee(3,:),'linewidth',2);
+grid on
+legend('x','y','z');
+xlabel('T');
+ylabel('Velocity');
+title('Cartesian Velocity vs Time')
 
