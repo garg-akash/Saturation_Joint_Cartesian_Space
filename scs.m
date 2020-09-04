@@ -9,7 +9,7 @@ function [T_c] = scs(M, c, g, dq, J, Jdot, m, n, X, dX, dt, X_max, X_min, V_max,
     J_carLim_dot = [];
     ddX_sat = [];
     len_sat_prev = 0;
-    %%%%Start loop%%%%
+
     while flag_sat
         T_stack = getTorques(tasks, M, c, g, dq, m, n);
         ddq = M\(T_stack - g - c);
@@ -20,8 +20,9 @@ function [T_c] = scs(M, c, g, dq, J, Jdot, m, n, X, dX, dt, X_max, X_min, V_max,
 %         J_carLim = [];
 %         J_carLim_dot = [];
 %         ddX_sat = [];
+%         len_sat_prev = 0;
         for i = 1:m
-            if( (ddX(i)>(ddX_max(i)+0.005)) || (ddX(i)<ddX_min(i)) )
+            if( (ddX(i)>(ddX_max(i)+0.005)) || (ddX(i)<(ddX_min(i)-0.005)) )
                 disp('saturation found!');
                 J_carLim = [J_carLim;J(i,:)];
                 J_carLim_dot = [J_carLim_dot;Jdot(i,:)];
@@ -33,6 +34,9 @@ function [T_c] = scs(M, c, g, dq, J, Jdot, m, n, X, dX, dt, X_max, X_min, V_max,
             end
         end
         if (length(ddX_sat)>len_sat_prev)
+            if (len_sat_prev>0)
+                tasks(1) = []; %the new task contains the previous saturations so remove the previous task
+            end
             task.J = J_carLim;
             task.Jdot = J_carLim_dot;
             task.f_star = ddX_sat;  

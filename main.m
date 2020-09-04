@@ -54,7 +54,7 @@ d7=0.078;   % distance from sixth joint frame to EE frame; EE in the tip of KUKA
 use_tau_f=false; % boolean telling whether tau_f should be used in the torque calculation or not
 
 global robot
-
+%Cartesian limits
 X_max = 1*[1;1;1];
 X_min = 1*[-1;-1;-1];
 V_max = 1*[0.5;0.5;0.5];
@@ -76,17 +76,15 @@ dq(:,1)=zeros(6,1); % 6x1 vector with the current joint velocity (the 7th joint 
 %%% no need to consider q7 if there is no EE desired orientation 
 ddq(:,1) = zeros(6,1);
 
-Kp = diag([8 8 8]); %position gain
+Kp = diag([80 80 80]); %position gain
 Kv = 2*sqrt(Kp); %velocity gain
 Kd = 10; %damping gain
 
 tasks = [];
-% figure
-% hold on
-if (0)
-    X_d = repmat(B,size(X_d,1),1);
-    dX_d = zeros(size(X_d));
-end
+% if (0)
+%     X_d = repmat(B,size(X_d,1),1);
+%     dX_d = zeros(size(X_d));
+% end
 for i = 1:nSteps
     fprintf('-----------%d----------\n',i);
     robot=KUKA_LWR(d1,d3,d5,d7,use_tau_f,q(:,i),dq(:,i));
@@ -97,15 +95,6 @@ for i = 1:nSteps
     ddPee(:,i) = Jdot*dq(:,i) + J*ddq(:,i);
     error_p(:,i) = (X_d(i,:)'-Pee(1:3,i));
     error_v(:,i) = (dX_d(i,:)'-dPee(:,i));
-%     plot3(Pee(1,1:i),Pee(2,1:i),Pee(3,1:i),'linewidth',2);
-%     hold on
-%     plot3(X_d(i,1),X_d(i,2),X_d(i,3),'linewidth',1);
-%     hold on
-%     xlabel('Traj x');
-%     ylabel('Traj y');
-%     zlabel('Traj z');
-%     legend('Output Traj','Desired Traj');
-    %%%
     f_pos_star = Kp*(X_d(i,:)'-Pee(1:3,i)) + Kv*(dX_d(i,:)'-dPee(:,i));
     f_damp_star = -Kd*dq(:,i);
     
@@ -129,7 +118,6 @@ for i = 1:nSteps
     dq(:,i+1) = dq(:,i) + ddq(:,i)*dt;
     q(:,i+1) = q(:,i) + dq(:,i)*dt + 0.5*ddq(:,i)*dt*dt;
 end
-% hold off
 size_Pee = size(Pee,2);
 % figure;
 % plot(tSteps(1:size_Pee),Pee(1,:));
