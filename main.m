@@ -44,29 +44,18 @@ for i = 1:nSteps
     dX_d(i,:) = [dxt(i) dyt(i) dzt_0];
 end
 %% Symbolic Jacobian
-JCarsym1 = []; JdotCarsym1=[]; 
-JCarsym2 = []; JdotCarsym2=[];
-JCarsym3 = []; JdotCarsym3=[];
-JCarsym4 = []; JdotCarsym4=[];
-JCarsym5 = []; JdotCarsym5=[];
-JCarsym6 = []; JdotCarsym6=[];
-alpha = [pi/2,-pi/2,-pi/2,pi/2,pi/2,-pi/2,0];
-a = [0,0,0,0,0,0,0];
-d = [sym('d1'),0,sym('d3'),0,sym('d5'),0,sym('d7')];
-qsym = [sym('q1'),sym('q2'),sym('q3'),sym('q4'),sym('q5'),sym('q6'),0];
-dqsym = [sym('dq1');sym('dq2');sym('dq3');sym('dq4');sym('dq5');sym('dq6')]; %these are the joint velocities at evaluation point
-[JCarsym1, JdotCarsym1] = computeJacobianSym(alpha(1:1),a(1:1),...
-    d(1:1),qsym(1:1),dqsym(1:1));
-[JCarsym2, JdotCarsym2] = computeJacobianSym(alpha(1:2),a(1:2),...
-    d(1:2),qsym(1:2),dqsym(1:2));
-[JCarsym3, JdotCarsym3] = computeJacobianSym(alpha(1:3),a(1:3),...
-    d(1:3),qsym(1:3),dqsym(1:3));
-[JCarsym4, JdotCarsym4] = computeJacobianSym(alpha(1:4),a(1:4),...
-    d(1:4),qsym(1:4),dqsym(1:4));
-[JCarsym5, JdotCarsym5] = computeJacobianSym(alpha(1:5),a(1:5),...
-    d(1:5),qsym(1:5),dqsym(1:5));
-[JCarsym6, JdotCarsym6] = computeJacobianSym(alpha(1:6),a(1:6),...
-    d(1:6),qsym(1:6),dqsym(1:6));
+nCar = 5;
+JCarsym = []; JdotCarsym=[]; flagCar = 0;
+if(nCar>0 && nCar<7)
+    flagCar = 1;
+    alpha = [pi/2,-pi/2,-pi/2,pi/2,pi/2,-pi/2,0];
+    a = [0,0,0,0,0,0,0];
+    d = [sym('d1'),0,sym('d3'),0,sym('d5'),0,sym('d7')];
+    qsym = [sym('q1'),sym('q2'),sym('q3'),sym('q4'),sym('q5'),sym('q6'),0];
+    dqsym = [sym('dq1');sym('dq2');sym('dq3');sym('dq4');sym('dq5');sym('dq6')]; %these are the joint velocities at evaluation point
+    [JCarsym, JdotCarsym] = computeJacobianSym(alpha(1:nCar),a(1:nCar),...
+                        d(1:nCar),qsym(1:nCar),dqsym(1:nCar));
+end
 %% Robot parameters for the KUKA-LWR
 m = 3;
 nJoints = 6;
@@ -79,12 +68,12 @@ use_tau_f=false; % boolean telling whether tau_f should be used in the torque ca
 
 global robot
 %Cartesian limits
-X_max = 1*[1;1;1];
-X_min = 1*[-1;-1;-1];
-V_max = 1*[0.5;0.5;0.5];
-V_min = 1*[-0.5;-0.5;-0.5];
-A_max = 1*[0.5;0.5;0.5];
-A_min = 1*[-0.5;-0.5;-0.5];
+X_max = 1*[0.6;0.6;0.6];
+X_min = 1*[-0.6;-0.6;-0.6];
+V_max = 0.1*[0.5;0.5;0.5];
+V_min = 0.1*[-0.5;-0.5;-0.5];
+A_max = 0.1*[0.5;0.5;0.5];
+A_min = 0.1*[-0.5;-0.5;-0.5];
 %% Control Loop
 q = zeros(6,nSteps);
 dq = zeros(6,nSteps);
@@ -100,7 +89,7 @@ dq(:,1)=zeros(6,1); % 6x1 vector with the current joint velocity (the 7th joint 
 %%% no need to consider q7 if there is no EE desired orientation 
 ddq(:,1) = zeros(6,1);
 
-Kp = diag([80 80 80]); %position gain
+Kp = diag([8 8 8]); %position gain
 Kv = 2*sqrt(Kp); %velocity gain
 Kd = 10; %damping gain
 
@@ -134,48 +123,40 @@ for i = 1:nSteps
     tasks = [task1;task2];
     %%%
     Parray(:,:,i) = robot.computeJointPositionArray;
-    q1 = q(1);
-    q2 = q(2);
-    q3 = q(3);
-    q4 = q(4);
-    q5 = q(5);
-    q6 = q(6);
-    
-    dq1 = dq(1);
-    dq2 = dq(2);
-    dq3 = dq(3);
-    dq4 = dq(4);
-    dq5 = dq(5);
-    dq6 = dq(6);
-    symvalues = [d1 d3 d5 d7 q1 q2 q3 q4 q5 q6 dq1 dq2 dq3 dq4 dq5 dq6];
-    JCar1 = double(subs(JCarsym1));
-    JdotCar1 = double(subs(JdotCarsym1));
-    JCar2 = double(subs(JCarsym2));
-    JdotCar2 = double(subs(JdotCarsym2));
-    JCar3 = double(subs(JCarsym3));
-    JdotCar3 = double(subs(JdotCarsym3));
-    JCar4 = double(subs(JCarsym4));
-    JdotCar4 = double(subs(JdotCarsym4));
-    JCar5 = double(subs(JCarsym5));
-    JdotCar5 = double(subs(JdotCarsym5));
-    JCar6 = double(subs(JCarsym6));
-    JdotCar6 = double(subs(JdotCarsym6));
-    dP1(:,i) = JCar1*dq(1:1,i);
-    ddP1(:,i) = JdotCar1*dq(1:1,i) + JCar1*ddq(1:1,i);
-    dP2(:,i) = JCar2*dq(1:2,i);
-    ddP2(:,i) = JdotCar2*dq(1:2,i) + JCar2*ddq(1:2,i);
-    dP3(:,i) = JCar3*dq(1:3,i);
-    ddP3(:,i) = JdotCar3*dq(1:3,i) + JCar3*ddq(1:3,i);
-    dP4(:,i) = JCar4*dq(1:4,i);
-    ddP4(:,i) = JdotCar4*dq(1:4,i) + JCar4*ddq(1:4,i);
-    dP5(:,i) = JCar5*dq(1:5,i);
-    ddP5(:,i) = JdotCar5*dq(1:5,i) + JCar5*ddq(1:5,i);
-    dP6(:,i) = JCar6*dq(1:6,i);
-    ddP6(:,i) = JdotCar6*dq(1:6,i) + JCar6*ddq(1:6,i);
+%     if(flagCar)
+%         PCar(:,i) = Parray(:,nCar,i);
+%         q1 = q(1);
+%         q2 = q(2);
+%         q3 = q(3);
+%         q4 = q(4);
+%         q5 = q(5);
+%         q6 = q(6);
+%         
+%         dq1 = dq(1);
+%         dq2 = dq(2);
+%         dq3 = dq(3);
+%         dq4 = dq(4);
+%         dq5 = dq(5);
+%         dq6 = dq(6);
+%         symvalues = [d1 d3 d5 d7 q1 q2 q3 q4 q5 q6 dq1 dq2 dq3 dq4 dq5 dq6];
+%         JCar = double(subs(JCarsym));
+%         JdotCar = double(subs(JdotCarsym));
+%         dPCar(:,i) = JCar*dq(1:nCar,i);
+%         ddPCar(:,i) = JdotCar*dq(1:nCar,i) + JCar*ddq(1:nCar,i);
+% %         JCar = [JCar,ones(3,(6-nCar))];
+% %         JdotCar = [JdotCar,ones(3,(6-nCar))];
+%     end
+    JCar = [J(:,1:nCar),zeros(3,(6-nCar))];
+    JdotCar = [Jdot(:,1:nCar),zeros(3,(6-nCar))];
+    PCar(:,i) = Parray(:,nCar,i);
+    dPCar(:,i) = JCar*dq(:,i);
+    ddPCar(:,i) = JCar*ddq(:,i)+JdotCar*dq(:,i);
     %%%
     %T_stack_c(:,i) = getTorques(tasks, M, cc, g, dq(:,i), m, nJoints);%qsym, dqsym, symvalues
     %T_stack_c = J'*f_pos_star + n - S*dq(:,i);
-    T_stack_c(:,i) = scs(M, cc, g, dq(:,i), J, Jdot, m, nJoints, Pee(1:3,i), dPee(:,i), dt, X_max, X_min, V_max, V_min, A_max, A_min, tasks, i);
+    T_stack_c(:,i) = scs(M, cc, g, dq(:,i), J, Jdot, m, nJoints, Pee(1:3,i), dPee(:,i),...
+                    dt, X_max, X_min, V_max, V_min, A_max, A_min, tasks, i, JCar,...
+                    JdotCar, PCar(1:3,i), dPCar(:,i), nCar);
     ddq(:,i+1) = M\(T_stack_c(:,i) - n);
     %%%%%
     %a = ddX_d(i,:)' + Kd*(dX_d(i,:)'-dPee(:,i)) + Kp*(X_d(i,:)'-Pee(1:3,i));
@@ -238,6 +219,7 @@ legend('in x','in y','in z');
 title('Cartesian Error vs Time')
 
 figure
+hold on
 plot(tSteps,T_stack_c(1,:),'linewidth',2);
 hold on;
 plot(tSteps,T_stack_c(2,:),'linewidth',2);
@@ -256,6 +238,7 @@ ylabel('Joint Torque');
 title('Joint Torque vs Time')
 
 figure
+hold on
 plot(tSteps,ddPee(1,:),'linewidth',2);
 hold on;
 plot(tSteps,ddPee(2,:),'linewidth',2);

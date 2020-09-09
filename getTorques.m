@@ -7,9 +7,6 @@ function [T_stack] = getTorques(tasks, M, c, g, dq,  m, n)%qsym, dqsym, symvalue
     disp('22')
     k = length(tasks);
     fprintf('Number of tasks given : %d',k);
-    J = zeros(m,n); 
-    f_star = zeros(m,1); 
- 
     %N_aug_prev = zeros(n);
     %J_h_prev = zeros(m,n);
     %J_hc_prev = zeros(m,n);
@@ -42,16 +39,23 @@ function [T_stack] = getTorques(tasks, M, c, g, dq,  m, n)%qsym, dqsym, symvalue
         J_h_dot = Jdot*N_aug';
 %         lambda_h = inv(J_h*(M\J_h')); %inv(M)*J_h'
         [U,S,V] = svd(J_h*(M\J_h')); %svd of lambda_inverse
-%         if (i==1 && k>2)
-%         else
+        if (i==1 && k>2)
+            for j = size(S,2):-1:1
+                if S(j,j)<0.0000001
+                    U(:,j) = [];
+                    S(:,j) = [];
+                    S(j,:) = [];
+                end
+            end
+        else
         for j = size(S,2):-1:1
-            if S(j,j)<0.01
+            if S(j,j)<0.001
                 U(:,j) = [];
                 S(:,j) = [];
                 S(j,:) = [];
             end
         end
-%         end
+        end
         lambda_h = U*S^(-1)*U';
         J_hc = M\(J_h'*lambda_h);
         mu_h = J_hc'*c - lambda_h*J_h_dot*dq;
