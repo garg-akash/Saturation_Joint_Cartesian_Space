@@ -43,19 +43,6 @@ for i = 1:nSteps
     X_d(i,:) = [x(i) y(i) z_0];
     dX_d(i,:) = [dxt(i) dyt(i) dzt_0];
 end
-%% Symbolic Jacobian
-nCar = 5;
-JCarsym = []; JdotCarsym=[]; flagCar = 0;
-if(nCar>0 && nCar<7)
-    flagCar = 1;
-    alpha = [pi/2,-pi/2,-pi/2,pi/2,pi/2,-pi/2,0];
-    a = [0,0,0,0,0,0,0];
-    d = [sym('d1'),0,sym('d3'),0,sym('d5'),0,sym('d7')];
-    qsym = [sym('q1'),sym('q2'),sym('q3'),sym('q4'),sym('q5'),sym('q6'),0];
-    dqsym = [sym('dq1');sym('dq2');sym('dq3');sym('dq4');sym('dq5');sym('dq6')]; %these are the joint velocities at evaluation point
-    [JCarsym, JdotCarsym] = computeJacobianSym(alpha(1:nCar),a(1:nCar),...
-                        d(1:nCar),qsym(1:nCar),dqsym(1:nCar));
-end
 %% Robot parameters for the KUKA-LWR
 m = 3;
 nJoints = 6;
@@ -68,12 +55,25 @@ use_tau_f=false; % boolean telling whether tau_f should be used in the torque ca
 
 global robot
 %Cartesian limits
-X_max = 1*[0.6;0.6;0.6];
-X_min = 1*[-0.6;-0.6;-0.6];
-V_max = 0.1*[0.5;0.5;0.5];
-V_min = 0.1*[-0.5;-0.5;-0.5];
-A_max = 0.1*[0.5;0.5;0.5];
-A_min = 0.1*[-0.5;-0.5;-0.5];
+X_max = 2*[0.5;0.5;0.5];
+X_min = 2*[-0.5;-0.5;-0.5];
+V_max = 1*[0.5;0.5;0.5];
+V_min = 1*[-0.5;-0.5;-0.5];
+A_max = 1*[0.5;0.5;0.5];
+A_min = 1*[-0.5;-0.5;-0.5];
+%% Symbolic Jacobian
+nCar = 6;
+JCarsym = []; JdotCarsym=[]; flagCar = 0;
+if(nCar>0 && nCar<7)
+    flagCar = 1;
+    alpha = [pi/2,-pi/2,-pi/2,pi/2,pi/2,-pi/2,0];
+    a = [0,0,0,0,0,0,0];
+    d = [d1,0,d3,0,d5,0,d7];
+    qsym = [sym('q1'),sym('q2'),sym('q3'),sym('q4'),sym('q5'),sym('q6'),0];
+    dqsym = [sym('dq1');sym('dq2');sym('dq3');sym('dq4');sym('dq5');sym('dq6');0]; %these are the joint velocities at evaluation point
+    [JCarsym, JdotCarsym] = computeJacobianSym(alpha(1:nCar),a(1:nCar),...
+                        d(1:nCar),qsym(1:nCar),dqsym(1:nCar));
+end
 %% Control Loop
 q = zeros(6,nSteps);
 dq = zeros(6,nSteps);
@@ -123,34 +123,34 @@ for i = 1:nSteps
     tasks = [task1;task2];
     %%%
     Parray(:,:,i) = robot.computeJointPositionArray;
-%     if(flagCar)
-%         PCar(:,i) = Parray(:,nCar,i);
-%         q1 = q(1);
-%         q2 = q(2);
-%         q3 = q(3);
-%         q4 = q(4);
-%         q5 = q(5);
-%         q6 = q(6);
-%         
-%         dq1 = dq(1);
-%         dq2 = dq(2);
-%         dq3 = dq(3);
-%         dq4 = dq(4);
-%         dq5 = dq(5);
-%         dq6 = dq(6);
-%         symvalues = [d1 d3 d5 d7 q1 q2 q3 q4 q5 q6 dq1 dq2 dq3 dq4 dq5 dq6];
-%         JCar = double(subs(JCarsym));
-%         JdotCar = double(subs(JdotCarsym));
-%         dPCar(:,i) = JCar*dq(1:nCar,i);
-%         ddPCar(:,i) = JdotCar*dq(1:nCar,i) + JCar*ddq(1:nCar,i);
-% %         JCar = [JCar,ones(3,(6-nCar))];
-% %         JdotCar = [JdotCar,ones(3,(6-nCar))];
-%     end
-    JCar = [J(:,1:nCar),zeros(3,(6-nCar))];
-    JdotCar = [Jdot(:,1:nCar),zeros(3,(6-nCar))];
-    PCar(:,i) = Parray(:,nCar,i);
-    dPCar(:,i) = JCar*dq(:,i);
-    ddPCar(:,i) = JCar*ddq(:,i)+JdotCar*dq(:,i);
+    if(flagCar)
+        PCar(:,i) = Parray(:,nCar,i);
+        q1 = q(1,i);
+        q2 = q(2,i);
+        q3 = q(3,i);
+        q4 = q(4,i);
+        q5 = q(5,i);
+        q6 = q(6,i);
+        
+        dq1 = dq(1,i);
+        dq2 = dq(2,i);
+        dq3 = dq(3,i);
+        dq4 = dq(4,i);
+        dq5 = dq(5,i);
+        dq6 = dq(6,i);
+        symvalues = [q1 q2 q3 q4 q5 q6 dq1 dq2 dq3 dq4 dq5 dq6];
+        JCar = double(subs(JCarsym));
+        JdotCar = double(subs(JdotCarsym));
+        dPCar(:,i) = JCar*dq(1:nCar,i);
+        ddPCar(:,i) = JdotCar*dq(1:nCar,i) + JCar*ddq(1:nCar,i);
+        JCar = [JCar,zeros(3,(6-nCar))];
+        JdotCar = [JdotCar,zeros(3,(6-nCar))];
+    end
+%     JCar = [J(:,1:nCar),zeros(3,(6-nCar))];
+%     JdotCar = [Jdot(:,1:nCar),zeros(3,(6-nCar))];
+%     PCar(:,i) = Parray(:,nCar,i);
+%     dPCar(:,i) = JCar*dq(:,i);
+%     ddPCar(:,i) = JCar*ddq(:,i)+JdotCar*dq(:,i);
     %%%
     %T_stack_c(:,i) = getTorques(tasks, M, cc, g, dq(:,i), m, nJoints);%qsym, dqsym, symvalues
     %T_stack_c = J'*f_pos_star + n - S*dq(:,i);

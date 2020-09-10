@@ -10,9 +10,6 @@ function [T_c] = scs(M, c, g, dq, J, Jdot, m, n, X, dX, dt, X_max, X_min, V_max,
     J_carLim_dot = [];
     ddX_sat = [];
     len_sat_prev = 0;
-%     if (iter==1473)
-%         keyboard;
-%     end
     %%%%Start loop%%%%
     while flag_sat
         T_stack = getTorques(tasks, M, c, g, dq, m, n);
