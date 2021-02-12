@@ -9,14 +9,14 @@ Result of cartesian tracking control loop. (Not tunned(Left); Tracking output wi
 <br />
 * Original Algorithm
 ![alt text](images/Orig.png)
-<br />
+
 * Proposed Algorithm
 ![alt text](images/Prop.png)
-<br />
+
 **Graphical result** of the Original algorithm vs Proposed algorithm
-<br />
+
 * Original Algorithm
 ![alt text](images/Orig_graph.png)
-<br />
+
 * Proposed Algorithm
 ![alt text](images/Prop_graph.png)
