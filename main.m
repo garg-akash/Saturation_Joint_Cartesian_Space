@@ -45,7 +45,7 @@ Tstop = T; %Duration of simulation (s)
 numSimSteps = size(0:Ts:Tstop,2);
 % Initialization
 q = zeros(6,numSimSteps);dq = zeros(6,numSimSteps);
-ddq = zeros(6,numSimSteps);tau_stack_SJS = zeros(6,numSimSteps);
+ddq = zeros(6,numSimSteps);tau_stack_SJCS = zeros(6,numSimSteps);
 Pee = zeros(4,numSimSteps);Vee = zeros(3,numSimSteps);
 Aee = zeros(3,numSimSteps);A_elbow = zeros(3,numSimSteps);
 P_elbow = zeros(4,numSimSteps);V_elbow = zeros(3,numSimSteps);
@@ -71,7 +71,6 @@ VXMax = [100;0.03;100];
 VXMin = -[100;100;100];
 AXMax = [100;0.2;100];
 AXMin = -AXMax;
-
 %% Assigning the control parameters
 Kp = 8*diag([100,100,100]);
 Kv = 2*sqrt(Kp);
@@ -116,7 +115,6 @@ Pee(:,1) = robot.computeEnd_effectorPosition; %initial position of the end-effec
 Vee(:,1) = robot.computeEnd_effectorVelocity; %initial velocity of the end-effector
 P_elbow(:,1) = robot.computeElbowPosition; %initial position of the elbow
 V_elbow(:,1) = robot.computeElbowVelocity; %initial velocity of the elbow
-
 %% The Main Loop
 for k = 1:numSimSteps
     robot = KUKA_LWR(d1,d3,d5,d7,use_tau_f,q(:,k),dq(:,k));
@@ -124,9 +122,8 @@ for k = 1:numSimSteps
     J_elbow = robot.computeElbowJacobian; %compute jacobian of the elbow
     dJ_elbow = robot.computeElbowJacobiandot; %compute derivative of elbow jacobian
     tasks = genTasks(J,Jdot,Pd(:,k),Pee(1:3,k),dPd(:,k),Vee(:,k),dq(:,k)); %generate tasks
-    [tasksOutputSCS] = scs(M, n, J_elbow, dJ_elbow,dq(:,k), P_elbow(1:3,k), V_elbow(:,k), XMin, XMax, VXMin, VXMax, AXMin, AXMax, tasks);
-    [tau_stack_SJS(:,k)] = sjs(M, n, J, q(:,k),dq(:,k), QMin, QMax, VJntMin, VJntMax, AJntMin, AJntMax, tasksOutputSCS);
-    ddq(:,k) = M^(-1)*(tau_stack_SJS(:,k) - n); %compute the acceleration of the computed torque
+    tau_stack_SJCS(:,k) = SJCS(M, n, J, J_elbow, dJ_elbow, q(:,k),dq(:,k), QMin, QMax, VJntMin, VJntMax, AJntMin, AJntMax, P_elbow(1:3,k), V_elbow(:,k), XMin, XMax, VXMin, VXMax, AXMin, AXMax, tasks);
+    ddq(:,k) = M^(-1)*(tau_stack_SJCS(:,k) - n); %compute the acceleration of the computed torque
     dq(:,k+1) = dq(:,k) + ddq(:,k)*Ts; %integrate to obtain joint velocity
     q(:,k+1) = q(:,k) + dq(:,k)*Ts + 0.5*ddq(:,k)*Ts.^2; %integrate to obtain joint position
     Aee(:,k) = J*ddq(:,k) + Jdot*dq(:,k); %compute the acceleration of the end-effector
@@ -137,5 +134,6 @@ for k = 1:numSimSteps
     P_elbow(:,k+1) = robot.computeElbowPosition; %compute elbow position
     V_elbow(:,k+1) = robot.computeElbowVelocity; %compute elbow velocity
 end
+
 %% Plot results
-results_plot;
+result_plot;

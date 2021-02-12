@@ -27,7 +27,7 @@ grid on;
 legend('$\mathbf{X_{EE,d}}$','$\mathbf{X_{EE,cur}}$','$\mathbf{X_{elb,cur}}$','Obstacle','interpreter','latex','Location','southwest')
 axis('normal')
 % pause
-% export_fig ('figures/exp2_fig1_origg','-eps','-pdf','-painters','-transparent')
+% export_fig ('figures/exp2_fig1_new','-eps','-pdf','-painters','-transparent')
 
 figure
 dT = (1:numSimSteps)*Ts;
@@ -49,7 +49,7 @@ ylim([min(V_elbow(axs,:))-0.1 max(V_elbow(axs,:))+0.1]);
 ylabel('Cartesian elbow velocity $[m/s]$','Interpreter','latex');
 legend('Current elbow position in y','Minimal elbow position in y','Current elbow velicity in y','Maximal elbow velocity in y','Interpreter','latex')
 
-% export_fig ('figures/exp2_fig2_orig','-eps','-pdf','-painters','-transparent')
+% export_fig ('figures/exp2_fig2_new','-eps','-pdf','-painters','-transparent')
 
 figure
 dT = (1:numSimSteps)*Ts;
@@ -57,11 +57,12 @@ plot(dT,A_elbow(axs,1:numSimSteps)./AXMax(axs),'linewidth',2,'color',Blue),grid;
 yline(1,'--','linewidth',2,'color','#0072BD')
 yline(-1,'--','linewidth',2,'color','#0072BD')
 xlim([0 Tstop]);
-ylim([min(A_elbow(axs,:))/AXMax(axs)-1 max(A_elbow(axs,:))/AXMax(axs)+1]);
+ylim([-3 3]);
+ylim([min(A_elbow(axs,:))/AXMax(axs)-2 max(A_elbow(axs,:))/AXMax(axs)+2]);
 ylabel('Cartesian elbow acceleration $[\ddot{X}_{elb}/{A_{c,max}}]$','Interpreter','latex');
 xlabel('Time [s]','Interpreter','latex');
-% export_fig ('figures/exp2_fig3_orig','-eps','-pdf','-painters','-transparent')
-%%
+% export_fig ('figures/exp2_fig3_new','-eps','-pdf','-painters','-transparent')
+%
 figure
 dT = (1:numSimSteps)*Ts;
 plot(dT,q(:,1:numSimSteps)./QMax,'linewidth',2),grid on;
@@ -70,7 +71,7 @@ xlim([0 Tstop]);
 ylim([-1.1 1.1]);
 ylabel('Joint position $[q/Q_{max}]$','Interpreter','latex');
 xlabel('Time [s]','Interpreter','latex');
-% export_fig ('figures/exp2_fig4_orig','-eps','-pdf','-painters','-transparent')
+% export_fig ('figures/exp2_fig4_new','-eps','-pdf','-painters','-transparent')
 
 figure
 dT = (1:numSimSteps)*Ts;
@@ -80,7 +81,7 @@ xlim([0 Tstop]);
 ylim([-1.1 1.1]);
 ylabel('Joint velocity $[\dot{q}/V_{j,max}]$','Interpreter','latex');
 xlabel('Time [s]','Interpreter','latex');
-% export_fig ('figures/exp2_fig5_orig','-eps','-pdf','-painters','-transparent')
+% export_fig ('figures/exp2_fig5_new','-eps','-pdf','-painters','-transparent')
 
 figure
 dT = (1:numSimSteps)*Ts;
@@ -90,17 +91,17 @@ xlim([0 Tstop]);
 ylim([-1.1 1.1]);
 ylabel('Joint acceleration $[\ddot{q}/A_{j,max}]$','Interpreter','latex');
 xlabel('Time [s]','Interpreter','latex');
-% export_fig ('figures/exp2_fig6_orig','-eps','-pdf','-painters','-transparent')
+% export_fig ('figures/exp2_fig6_new','-eps','-pdf','-painters','-transparent')
 
 
 figure
 dT = (1:numSimSteps)*Ts;
-plot(dT,tau_stack_SJS(:,1:numSimSteps),'linewidth',2),grid on;
+plot(dT,tau_stack_SJCS(:,1:numSimSteps),'linewidth',2),grid on;
 legend('joint 1','joint 2','joint 3','joint 4','joint 5','joint 6','Orientation','horizontal','Location','northoutside'	,'Interpreter','latex');
 xlim([0 Tstop]);
 ylabel('Joint torque $[Nm]$','Interpreter','latex');
 xlabel('Time [s]','Interpreter','latex');
-% export_fig ('figures/exp2_fig7_orig','-eps','-pdf','-painters','-transparent')
+% export_fig ('figures/exp2_fig7_new','-eps','-pdf','-painters','-transparent')
 
 
 figure
@@ -109,7 +110,7 @@ eP = Pd-Pee(1:3,1:size(Pee,2)-1);
 plot(dT,eP(1,:),dT,eP(2,:),dT,eP(3,:),'linewidth',2),grid;
 legend('$\mathbf{e_x}$','$\mathbf{e_y}$','$\mathbf{e_z}$','Interpreter','latex');
 xlim([0 Tstop]);
-ylim([-3.5e-1 3.5e-1]);
+ylim([-6e-2 6e-2]);
 ylabel('End-effector position error [m]','Interpreter','latex');
 xlabel('Time [s]','Interpreter','latex');
-% export_fig ('figures/exp2_fig8_orig','-eps','-pdf','-painters','-transparent')
+% export_fig ('figures/exp2_fig8_new','-eps','-pdf','-painters','-transparent')
